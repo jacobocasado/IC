@@ -72,6 +72,11 @@
 (femenino HIJO HIJA) (femenino PADRE MADRE) (femenino ABUELO ABUELA) (femenino NIETO NIETA) (femenino HERMANO HERMANA) (femenino ESPOSO ESPOSA) (femenino PRIMO PRIMA) (femenino TIO TIA) (femenino SOBRINO SOBRINA) (femenino CUNIADO CUNIADA) (femenino YERNO NUERA) (femenino SUEGRO SUEGRA)) 
 
 
+;; Lo he aniadido yo para poder comprobar los HIJOS, NIETOS, es decir, los plurales, para que muestre tanto nietos como nietas
+
+(deffacts plurales
+(plural HIJO HIJOS) (plural PADRE PADRES) (plural ABUELO ABUELOS) (plural NIETO NIETOS) (plural HERMANO HERMANOS) (plural ESPOSO ESPOSOS) (plural PRIMO PRIMOS) (plural TIO TIOS) (plural SOBRINO SOBRINOS) (plural CUNIADO CUNIADOS) (plural YERNO NUEROS) (plural SUEGRO SUEGROS)) 
+
 ;;;;; REGLAS DEL SISTEMA ;;;;;
 
 ;;;; La dualidad es simetrica: si r es dual de t, t es dual de r. Por eso solo metimos como hecho la dualidad en un sentidos, pues en el otro lo podiamos deducir con esta regla
@@ -135,7 +140,8 @@
    (Relacion (tipo ?r) (sujeto ?y) (objeto ?x))
    (hombre ?y)
  =>
-   (printout t ?y " es " ?r " de " ?x crlf) )
+   (printout t ?y " es " ?r " de " ?x crlf)
+)
    
 (defrule relacionfemenino
    (primerapersona ?x)		
@@ -144,6 +150,25 @@
    (Relacion (tipo ?t) (sujeto ?y) (objeto ?x))
    (mujer ?y)
  =>
-   (printout t ?y " es " ?r " de " ?x crlf) )
+   (printout t ?y " es " ?r " de " ?x crlf) 
+)
+
+(defrule relacionplural
+	(primerapersona ?x)		
+	(relacionabuscar ?r)
+	(plural ?t ?r)
+	(Relacion (tipo ?t) (sujeto ?y) (objeto ?x))
+	=>
+   (printout t ?y " es " ?t " de " ?x crlf) 
+)
+
+
+(defrule nohayrelacion
+   (primerapersona ?x)		
+   (relacionabuscar ?r)
+   (femenino ?t ?r)
+ =>
+   (printout t " No hay ningún miembro de la familia con ese parentesco con " ?x crlf) 
+)
 
  

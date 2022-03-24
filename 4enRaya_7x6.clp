@@ -59,6 +59,22 @@
 (printout t  crlf)
 )
 
+;;;; TABLERO DE ANALISIS ;;;;;;
+
+
+(defrule crear_tablero_analisis
+(Turno M)
+(Tablero Juego ?f ?c ?j)
+=>
+(assert (Tablero Analisis ?f ?c ?j))
+)
+
+(defrule destruir_tablero_analisis
+(Turno J)
+?h <- (Tablero Analisis ?f ?c ?j)
+=>
+(retract ?h)
+)
 
 ;;;;;;;;;;;;;;;;;;;;;;; RECOGER JUGADA DEL CONTRARIO ;;;;;;;;;;;;;;;;;;;;;;;
 (defrule mostrar_posicion
@@ -139,6 +155,7 @@
 )
 
 ;;;;;;;;;;; CLISP JUEGA SIN CRITERIO ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (defrule elegir_jugada_aleatoria
 (declare (salience -9998))
 ?f <- (Turno M)
@@ -162,9 +179,116 @@
 (printout t "JUEGO en la columna (sin criterio) " ?c crlf)
 (retract ?f)
 (assert (Juega M ?c))
-(printout t "Juego sin razonar, que mal"  crlf) 
+(printout t "Juego sin razonar, que mal"  crlf)
 )
 
+
+;;;;;;; CLIPS JUEGA CON CRITERIO ;;;;;
+
+
+(defrule ganaria
+(declare (salience 9999))
+?f <- (Turno M)
+(Ganaria M ?i ?c)
+=>
+(printout t "Pongo finalmente la ficha en la columna " ?c " para ganar." crlf)
+(assert (Juega M ?c))
+(retract ?f)
+)
+
+(defrule bloquear_cuatro_linea_conectado
+(declare (salience 9998))
+?f <- (Turno M)
+(3linea Juego ?orientacion ?i1 ?c1 ?i3 ?c3 J)
+(or (Siguiente ?i3 ?c3 ?orientacion ?i4 ?c4) (Anterior ?i1 ?c1 ?orientacion ?i4 ?c4))
+(Caeria Juego ?i4 ?c4)
+;la ficha donde caeria es la siguiente a una en la que hay una ficha nuestra
+(Tablero Juego ?i5 ?c5 M)
+(or (Siguiente ?i4 ?c4 ?orientacion ?i5 ?c5) (Anterior ?i4 ?c4 ?orientacion ?i5 ?c5))
+=>
+(assert (Juega M ?c4))
+(retract ?f)
+(printout t "Juego en la columna " ?c4 " para evitar el cuatro en línea del rival, aprovechando y conectando con una ficha que ya tengo." crlf)
+)
+
+(defrule bloquear_cuatro_linea
+(declare (salience 9998))
+?f <- (Turno M)
+(3linea Juego ?orientacion ?i1 ?c1 ?i3 ?c3 J)
+(or (Siguiente ?i3 ?c3 ?orientacion ?i4 ?c4) (Anterior ?i1 ?c1 ?orientacion ?i4 ?c4))
+(Caeria Juego ?i4 ?c4)
+=>
+(assert (Juega M ?c4))
+(retract ?f)
+(printout t "Juego en la columna " ?c4 " para evitar el cuatro en línea del rival." crlf)
+)
+
+
+(defrule bloquear_tres_linea
+(declare (salience 9997))
+?f <- (Turno M)
+(Conectado Juego ?orientacion ?i1 ?c1 ?i2 ?c2 J)
+(or (Siguiente ?i2 ?c2 ?orientacion ?i3 ?c3) (Anterior ?i1 ?c1 ?orientacion ?i3 ?c3))
+(Caeria Juego ?i3 ?c3)
+=>
+(assert (Juega M ?c3))
+(retract ?f)
+(printout t "Juego en la columna " ?c3 " para evitar el tres en línea del rival." crlf)
+)
+
+(defrule poner_tres_linea
+(declare (salience 9997))
+?f <- (Turno M)
+(Conectado Juego ?orientacion ?i1 ?c1 ?i2 ?c2 M)
+(or (Siguiente ?i2 ?c2 ?orientacion ?i3 ?c3) (Anterior ?i1 ?c1 ?orientacion ?i3 ?c3))
+(Caeria Juego ?i3 ?c3)
+=>
+(assert (Juega M ?c3))
+(retract ?f)
+(printout t "Juego en la columna " ?c3 " para conectar tres en linea." crlf)
+)
+
+(defrule poner_dos_linea_bloqueando
+?f <- (Turno M)
+(Caeria Juego ?i ?c)
+(Tablero Juego ?f1 ?c1 M)
+(Tablero Juego ?f2 ?c2 J)
+(or (Siguiente ?f2 ?c2 ?orientacion ?i ?c) (Anterior ?f2 ?c2 ?orientacion ?i ?c))
+(or (Siguiente ?f1 ?c1 ?orientacion ?i ?c) (Anterior ?f1 ?c1 ?orientacion ?i ?c))
+=>
+(assert (Juega M ?c))
+(retract ?f)
+(printout t "Juego en la columna " ?c " para hacer un básico dos en linea, pero al lado del rival para bloquear un poco su avance." crlf)
+)
+
+(defrule poner_dos_linea
+?f <- (Turno M)
+(Caeria Juego ?i ?c)
+(Tablero Juego ?f1 ?c1 M)
+(or (Siguiente ?f1 ?c1 ?orientacion ?i ?c) (Anterior ?f1 ?c1 ?orientacion ?i ?c))
+=>
+(assert (Juega M ?c))
+(retract ?f)
+(printout t "Juego en la columna " ?c " para hacer un básico dos en linea." crlf)
+)
+
+(defrule dominar_medio
+?f <- (Turno M)
+(Tablero Juego 6 4 _)
+=>
+(assert (Juega M 4))
+(retract ?f)
+(printout t "Juego en la columna 4 , central de la primera fila, al principio de la partida, para dominar el medio del mapa. Así puedo hacer más combinaciones que jugando en la esquina y evito que el rival me coloque su ficha aquí." crlf)
+)
+
+(defrule dominar_medio_cuando_rival_empieza
+?f <- (Turno M)
+(Tablero Juego 6 4 J)
+=>
+(assert (Juega M 3))
+(retract ?f)
+(printout t "Juego en la columna 3 , al lado del central de la primera fila, al principio de la partida, para dominar el medio del mapa, al lado de mi rival. Así puedo hacer más combinaciones que jugando en la esquina y evito que el rival me coloque su ficha aquí." crlf)
+)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;  Comprobar si hay 4 en linea ;;;;;;;;;;;;;;;;;;;;;
 
@@ -312,7 +436,26 @@
 (assert (Anterior (+ ?f 1) ?c vertical ?f ?c))
 )
 
+(defrule siguiente_diagonal_directa
+(Tablero Juego ?f ?c _)
+(test (< ?f 6))
+(test (> ?f 0))
+=>
+(assert (Siguiente ?f ?c diagonal_directa (+ ?f 1) (+ ?c 1)))
+(assert (Anterior (+ ?f 1) (+ ?c 1) vertical ?f ?c))
+)
+
+(defrule siguiente_diagonal_inversa
+(Tablero Juego ?f ?c _)
+(test (< ?f 6))
+(test (> ?f 0))
+=>
+(assert (Siguiente ?f ?c diagonal_inversa (- ?f 1) (+ ?c 1)))
+(assert (Anterior (- ?f 1) (+ ?c 1) vertical ?f ?c))
+)
+
 (defrule conectado_dos_horizontal
+(declare (salience 9999))
 (Tablero ?t ?i ?c1 ?jugador)
 (Tablero ?t ?i ?c2 ?jugador) 
 (test (= (+ ?c1 1) ?c2))
@@ -322,46 +465,51 @@
 )
 
 (defrule conectado_dos_vertical
+(declare (salience 9999))
 (Tablero ?t ?i1 ?c ?jugador)
 (Tablero ?t ?i2 ?c ?jugador)
 (test (= (+ ?i1 1) ?i2))
-(test (or (eq ?jugador M) (eq ?jugador J) ))
+(test (neq ?jugador _))
 =>
 (assert (Conectado ?t vertical ?i1 ?c ?i2 ?c ?jugador))
 )
 
 (defrule conectado_dos_diagonal_directa
+(declare (salience 9999))
 (Tablero ?t ?i ?c ?jugador)
 (Tablero ?t ?i1 ?c1 ?jugador)
 (test (= (+ ?i 1) ?i1))
 (test (= (+ ?c 1) ?c1))
-(test (or (eq ?jugador M) (eq ?jugador J) ))
+(test (neq ?jugador _))
 =>
-(assert (Conectado ?t diagonal1 ?i ?c ?i1 ?c1 ?jugador))
+(assert (Conectado ?t diagonal_directa ?i ?c ?i1 ?c1 ?jugador))
 )
 
 (defrule conectado_dos_diagonal_inversa
+(declare (salience 9999))
 (Tablero ?t ?i ?c ?jugador)
 (Tablero ?t ?i1 ?c1 ?jugador)
-(test (= (+ ?i 1) ?i1))
-(test (= (- ?c 1) ?c1))
-(test (or (eq ?jugador M) (eq ?jugador J) ))
+(test (= (- ?i 1) ?i1))
+(test (= (+ ?c 1) ?c1))
+(test (neq ?jugador _))
 =>
-(assert (Conectado ?t diagonal2 ?i ?c ?i1 ?c1 ?jugador))
+(assert (Conectado ?t diagonal_inversa ?i ?c ?i1 ?c1 ?jugador))
 )
 
 (defrule conectado_tres_horizontal
+(declare (salience 9999))
 (Tablero ?t ?i ?c1 ?jugador)
 (Tablero ?t ?i ?c2 ?jugador) 
 (test (= (+ ?c1 1) ?c2))
 (Tablero ?t ?i ?c3 ?jugador)
 (test (= (+ ?c1 2) ?c3))
-(test (or (eq ?jugador M) (eq ?jugador J) ))
+(test (neq ?jugador _))
 =>
 (assert (3linea ?t horizontal ?i ?c1 ?i ?c3 ?jugador))
 )
 
 (defrule conectado_tres_vertical
+(declare (salience 9999))
 (Tablero ?t ?i1 ?c ?jugador)
 (Tablero ?t ?i2 ?c ?jugador)
 (test (= (+ ?i1 1) ?i2))
@@ -381,60 +529,92 @@
 (Tablero ?t ?i2 ?c2  ?jugador)
 (test (= (+ ?i 2) ?i2))
 (test (= (+ ?c 2) ?c2))
-(test (or (eq ?jugador M) (eq ?jugador J) ))
+(test (neq ?jugador _))
 =>
-(assert (3linea ?t diagonal1 ?i ?c ?i2 ?c2 ?jugador))
+(assert (3linea ?t diagonal_directa ?i ?c ?i2 ?c2 ?jugador))
 )
 
 (defrule conectado_tres_diagonal_inversa
 (declare (salience 9999))
 (Tablero ?t ?i ?c ?jugador)
 (Tablero ?t ?i1 ?c1 ?jugador)
-(test (= (+ ?i 1) ?i1))
-(test (= (- ?c 1) ?c1))
+(test (= (- ?i 1) ?i1))
+(test (= (+ ?c 1) ?c1))
 (Tablero ?t ?i2 ?c2  ?jugador)
-(test (= (+ ?i 2) ?i2))
-(test (= (- ?c 2) ?c2))
-(test (or (eq ?jugador M) (eq ?jugador J) ))
+(test (= (- ?i 2) ?i2))
+(test (= (+ ?c 2) ?c2))
+(test (neq ?jugador _))
 =>
-(assert (3linea ?t diagonal2 ?i ?c ?i2 ?c2 ?jugador))
+(assert (3linea ?t diagonal_inversa ?i ?c ?i2 ?c2 ?jugador))
 )
 
 (defrule caeria
+(declare (salience 9999))
 (Tablero ?t ?f ?c _)
 (Siguiente ?f ?c vertical ?f1 ?c1)
 (Tablero ?t ?f1 ?c1 ?jugador)
-(test (or (eq ?jugador M) (eq ?jugador J) ))
+(test (neq ?jugador _))
 =>
-(assert (Caeria ?f ?c))
+(assert (Caeria ?t ?f ?c))
 )
 
 (defrule caeria_fondo
+(declare (salience 9999))
 (Tablero ?t ?f ?c _)
 (test (eq ?f 6))
 =>
-(assert (Caeria ?f ?c))
+(assert (Caeria ?t ?f ?c))
 )
 
 (defrule borrar_caeria
-?h <- (Caeria ?f ?c)
+(declare (salience 9999))
+?h <- (Caeria Juego ?f ?c)
 (Tablero ?t ?f ?c ?jugador)
-(test (or (eq ?jugador M) (eq ?jugador J) ))
+(test (neq ?jugador _))
 =>
 (retract ?h)
 )
 
-(defrule ganaria_siguiente
-(3linea ?t ?orientacion ?i ?c ?i1 ?c1 ?jugador)
-(Tablero ?t ?f2 ?c2 _)
-(Caeria ?f2 ?c2)
-(or (Siguiente ?i1 ?c1 ?orientacion ?f2 ?c2) (Anterior ?i ?c ?orientacion ?f2 ?c2))
+(defrule ganaria_siguiente_jugada
+(declare (salience 9999))
+(3linea ?t ?orientacion ?i1 ?c1 ?i3 ?c3 ?jugador)
+(or (Siguiente ?i3 ?c3 ?orientacion ?i4 ?c4) (Anterior ?i1 ?c1 ?orientacion ?i4 ?c4))
+(Caeria ?t ?i4 ?c4)
 =>
-(assert (Ganaria ?jugador ?c2))
+(printout t  " Ganaria porque tengo 3 en linea en " ?i1 ?c1 ?i3 ?c3 " y siguiente de " ?i3 ?c3 ?i4 ?c4 " y caeria en " ?i4 ?c4   crlf)
+
+(assert (Ganaria ?jugador ?i4 ?c4))
 )
 
+(defrule borrar_ganaria
+(declare (salience 9999))
+?h <- (Ganaria ?jugador ?f ?c)
+(Tablero Juego ?f ?c ?x)
+(test (neq ?x _))
+=>
+(retract ?h)
+)
 
+;; 2 en linea y 1 al otro lado.
+;;(defrule ganaria_poniendo_en_medio_siguiente
+;;(Conectado ?t ?orientacion ?i ?c ?i1 ?c1 ?jugador)
+;;(Siguiente ?i1 ?c1 ?orientacion ?i2 ?c2)
+;;(Caeria ?t ?i2 ?c2)
+;;(Siguiente ?i2 ?c2 ?orientacion ?i3 ?c3)
+;;(Tablero ?t ?i3 ?c3 ?jugador)
+;;=>
+;;(assert (Ganaria ?jugador ?i2 ?c2))
+;;)
 
+;;(defrule ganaria_poniendo_en_medio_anterior
+;;(Conectado ?t ?orientacion ?i ?c ?i1 ?c1 ?jugador)
+;;(Anterior ?i ?c ?orientacion ?i2 ?c2)
+;;(Caeria ?t ?i2 ?c2)
+;;(Anterior ?i2 ?c2 ?orientacion ?i3 ?c3)
+;;(Tablero ?t ?i3 ?c3 ?jugador)
+;;=>
+;;(assert (Ganaria ?jugador ?i2 ?c2))
+;;)
 
 
 
