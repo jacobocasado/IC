@@ -212,7 +212,7 @@
 )
 
 (defrule bloquear_cuatro_linea
-(declare (salience 9998))
+(declare (salience 9997))
 ?f <- (Turno M)
 (3linea Juego ?orientacion ?i1 ?c1 ?i3 ?c3 J)
 (or (Siguiente ?i3 ?c3 ?orientacion ?i4 ?c4) (Anterior ?i1 ?c1 ?orientacion ?i4 ?c4))
@@ -225,7 +225,7 @@
 
 
 (defrule bloquear_tres_linea
-(declare (salience 9997))
+(declare (salience 9996))
 ?f <- (Turno M)
 (Conectado Juego ?orientacion ?i1 ?c1 ?i2 ?c2 J)
 (or (Siguiente ?i2 ?c2 ?orientacion ?i3 ?c3) (Anterior ?i1 ?c1 ?orientacion ?i3 ?c3))
@@ -237,7 +237,7 @@
 )
 
 (defrule poner_tres_linea
-(declare (salience 9997))
+(declare (salience 9995))
 ?f <- (Turno M)
 (Conectado Juego ?orientacion ?i1 ?c1 ?i2 ?c2 M)
 (or (Siguiente ?i2 ?c2 ?orientacion ?i3 ?c3) (Anterior ?i1 ?c1 ?orientacion ?i3 ?c3))
@@ -249,6 +249,7 @@
 )
 
 (defrule poner_dos_linea_bloqueando
+(declare (salience 9994))
 ?f <- (Turno M)
 (Caeria Juego ?i ?c)
 (Tablero Juego ?f1 ?c1 M)
@@ -262,6 +263,7 @@
 )
 
 (defrule poner_dos_linea
+(declare (salience 9993))
 ?f <- (Turno M)
 (Caeria Juego ?i ?c)
 (Tablero Juego ?f1 ?c1 M)

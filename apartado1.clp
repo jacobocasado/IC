@@ -134,7 +134,7 @@
 
 ;;;;; Hacemos que nos diga por pantalla la relacion entre las persona introducida. Como la forma de expresarlo dependera del sexo, usamos dos reglas, una para cada sexo
 
-(defrule relacionmasculino
+(defrule buscar_relacion_singular
    (primerapersona ?x)		
    (relacionabuscar ?r)
    (Relacion (tipo ?r) (sujeto ?y) (objeto ?x))
@@ -142,18 +142,19 @@
  =>
    (printout t ?y " es " ?r " de " ?x crlf)
 )
-   
-(defrule relacionfemenino
+
+(defrule buscar_relacion_singular_mujer
    (primerapersona ?x)		
    (relacionabuscar ?r)
-   (femenino ?t ?r)
-   (Relacion (tipo ?t) (sujeto ?y) (objeto ?x))
+   (femenino ?r ?f)
+   (Relacion (tipo ?r) (sujeto ?y) (objeto ?x))
    (mujer ?y)
  =>
-   (printout t ?y " es " ?r " de " ?x crlf) 
+   (printout t ?y " es " ?f " de " ?x crlf)
 )
+   
 
-(defrule relacionplural
+(defrule buscar_relacion_plural
 	(primerapersona ?x)		
 	(relacionabuscar ?r)
 	(plural ?t ?r)
@@ -166,9 +167,9 @@
 (defrule nohayrelacion
    (primerapersona ?x)		
    (relacionabuscar ?r)
-   (femenino ?t ?r)
+   (not (Relacion (tipo ?r) (sujeto ?y) (objeto ?x)))
  =>
-   (printout t " No hay ningún miembro de la familia con ese parentesco con " ?x crlf) 
+   (printout t ?x " no tiene ningún " ?r crlf) 
 )
 
  
